@@ -29,6 +29,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Tag(name  = "用户管理")
 @RestController
@@ -46,6 +47,9 @@ public class UserController {
 
     @Autowired
     private UserSetting userSetting;
+
+    /** MD5格式：32位十六进制字符串 */
+    private static final Pattern MD5_PATTERN = Pattern.compile("^[a-fA-F0-9]{32}$");
 
     @GetMapping("/login")
     @PostMapping("/login")
@@ -92,6 +96,9 @@ public class UserController {
                 throw new ControllerException(ErrorCode.ERROR100);
             }
             //int userId = SecurityUtils.getUserId();
+            if (!MD5_PATTERN.matcher(password).matches()) {
+                throw new ControllerException(ErrorCode.ERROR400.getCode(), "新密码需为32位MD5格式");
+            }
             boolean result = userService.changePassword(user.getId(), password);
             if (!result) {
                 throw new ControllerException(ErrorCode.ERROR100);
@@ -207,6 +214,9 @@ public class UserController {
         }
         Role role = userInfo.getRole();
         if (role != null && role.getId() == 1) {
+            if (!MD5_PATTERN.matcher(password).matches()) {
+                throw new ControllerException(ErrorCode.ERROR400.getCode(), "新密码需为32位MD5格式");
+            }
             boolean result = userService.changePassword(userId, password);
             if (!result) {
                 throw new ControllerException(ErrorCode.ERROR100);
